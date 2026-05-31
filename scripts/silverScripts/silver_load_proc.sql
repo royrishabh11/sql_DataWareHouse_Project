@@ -63,4 +63,41 @@ DateADD(day,-1,LEAD(prd_start_dt) OVER (PARTITION BY prd_key ORDER by prd_start_
 FROM bronze.crm_prd_info
 
 
+--Select * from bronze.crm_sales_details
+TRUNCATE TABLE silver.crm_sales_details;
+Insert Into silver.crm_sales_details
+(
+	sls_ord_num	
+	,sls_prd_key	
+	,sls_cust_id	
+	,sls_order_dt	
+	,sls_ship_dt	
+	,sls_due_dt	
+	,sls_sales	
+	,sls_quantity	
+	,sls_price
+)
+Select
+sls_ord_num
+,sls_prd_key	
+,sls_cust_id		
+,CASE WHEN sls_order_dt <=0 OR LEN(sls_order_dt) != 8 THEN NULL
+	  ELSE CAST(CAST(sls_order_dt as nvarchar) AS DATE)
+END sls_order_dt
+,CASE WHEN sls_ship_dt <=0 OR LEN(sls_ship_dt) != 8 THEN NULL
+	  ELSE CAST(CAST(sls_ship_dt as nvarchar) AS DATE)
+END sls_ship_dt
+,CASE WHEN sls_due_dt <=0 OR LEN(sls_due_dt) != 8 THEN NULL
+	  ELSE CAST(CAST(sls_due_dt as nvarchar) AS DATE)
+END sls_due_dt
+,CASE WHEN sls_sales IS NULL OR sls_sales <=0  OR sls_sales != sls_quantity * ABS(sls_price)
+	THEN  sls_quantity * ABS(sls_price) ELSE sls_sales
+END sls_sales
+,sls_quantity	
+,CASE WHEN sls_price IS NULL OR sls_price <=0  
+	THEN sls_sales / NULLIF(sls_quantity,0) ELSE sls_price
+END sls_price
+from bronze.crm_sales_details 
+
+
 
