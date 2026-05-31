@@ -1,0 +1,100 @@
+--Data Cleaning for crm_cust_info (Bronze to Silver)
+
+--Check For Bronze
+
+select * from bronze.crm_sales_details
+
+-- Check for Unwanted spaces
+-- Expectation : No unwanted spaces
+
+Select sls_ord_num from bronze.crm_sales_details Where sls_ord_num != TRIM(sls_ord_num)
+
+-- Data Standardization & consistency
+
+Select sls_prd_key from bronze.crm_sales_details where sls_prd_key NOT IN (select prd_key from silver.crm_prd_info)
+Select sls_cust_id from bronze.crm_sales_details where sls_cust_id NOT IN (select cst_id from silver.crm_cust_info)
+
+-- Check For Invalid Date Orders
+
+Select * from bronze.crm_sales_details Where sls_order_dt <= 0 or LEN(sls_order_dt) != 8
+Select NULLIF(sls_order_dt,0) 
+from bronze.crm_sales_details 
+Where sls_order_dt <= 0 or LEN(sls_order_dt) != 8
+or sls_order_dt > 20500101 or sls_order_dt < 19000101
+
+Select NULLIF(sls_ship_dt,0) 
+from bronze.crm_sales_details 
+Where sls_ship_dt <= 0 or LEN(sls_ship_dt) != 8
+or sls_ship_dt > 20500101 or sls_ship_dt < 19000101
+
+Select NULLIF(sls_due_dt,0) 
+from bronze.crm_sales_details 
+Where sls_due_dt <= 0 or LEN(sls_due_dt) != 8
+or sls_due_dt > 20500101 or sls_due_dt < 19000101
+
+Select * from bronze.crm_sales_details  where sls_order_dt > sls_ship_dt or sls_order_dt > sls_due_dt
+
+--Check Data Consistency : Between Sales, Quantity and Price
+--Sales = Quantity * Price
+--Values must not be null, negative or zero
+
+select DISTINCT
+sls_sales	
+,sls_quantity	
+,sls_price
+from bronze.crm_sales_details
+Where sls_sales != sls_quantity * sls_price
+OR sls_sales IS NULL OR sls_quantity IS NULL OR sls_price IS NULL
+OR sls_sales <=0 OR sls_quantity <=0 OR sls_price <=0
+order by sls_sales ,sls_quantity ,sls_price 
+
+
+
+
+--Check For Silver
+
+select * from silver.crm_sales_details
+
+-- Check for Unwanted spaces
+-- Expectation : No unwanted spaces
+
+Select sls_ord_num from silver.crm_sales_details Where sls_ord_num != TRIM(sls_ord_num)
+
+-- Data Standardization & consistency
+
+Select sls_prd_key from silver.crm_sales_details where sls_prd_key NOT IN (select prd_key from silver.crm_prd_info)
+Select sls_cust_id from silver.crm_sales_details where sls_cust_id NOT IN (select cst_id from silver.crm_cust_info)
+
+-- Check For Invalid Date Orders
+
+Select * from silver.crm_sales_details Where sls_order_dt <= 0 or LEN(sls_order_dt) != 8
+Select NULLIF(sls_order_dt,0) 
+from silver.crm_sales_details 
+Where sls_order_dt <= 0 or LEN(sls_order_dt) != 8
+or sls_order_dt > 20500101 or sls_order_dt < 19000101
+
+Select NULLIF(sls_ship_dt,0) 
+from silver.crm_sales_details 
+Where sls_ship_dt <= 0 or LEN(sls_ship_dt) != 8
+or sls_ship_dt > 20500101 or sls_ship_dt < 19000101
+
+Select NULLIF(sls_due_dt,0) 
+from silver.crm_sales_details 
+Where sls_due_dt <= 0 or LEN(sls_due_dt) != 8
+or sls_due_dt > 20500101 or sls_due_dt < 19000101
+
+Select * from silver.crm_sales_details  where sls_order_dt > sls_ship_dt or sls_order_dt > sls_due_dt
+
+--Check Data Consistency : Between Sales, Quantity and Price
+--Sales = Quantity * Price
+--Values must not be null, negative or zero
+
+select DISTINCT
+sls_sales	
+,sls_quantity	
+,sls_price
+from silver.crm_sales_details
+Where sls_sales != sls_quantity * sls_price
+OR sls_sales IS NULL OR sls_quantity IS NULL OR sls_price IS NULL
+OR sls_sales <=0 OR sls_quantity <=0 OR sls_price <=0
+order by sls_sales ,sls_quantity ,sls_price 
