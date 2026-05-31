@@ -62,3 +62,5 @@ prd_start_dt,
 DateADD(day,-1,LEAD(prd_start_dt) OVER (PARTITION BY prd_key ORDER by prd_start_dt))-- Data Enrichment
 FROM bronze.crm_prd_info
 
+
+
